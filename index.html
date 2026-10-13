@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#5d9cef">
+  <meta name="description" content="Estação Alegria: lazer, piscinas e diversão para toda a família.">
+  <title>Estação Alegria | Diversão em família</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header class="topo">
+    <a class="marca" href="#" onclick="mostrarInicio(); return false;">
+      <img src="images/logo.png" alt="Logo Estação Alegria"
+           onerror="this.style.display='none'">
+      <span>Estação Alegria</span>
+    </a>
+    <nav>
+      <a href="#sobre">O clube</a>
+      <a href="#galeria">Galeria</a>
+      <a href="#novidades">Novidades</a>
+      <a href="https://www.instagram.com/estacao_alegria_oficial/"
+         target="_blank" rel="noopener">Instagram ↗</a>
+      <button id="abrir-admin" class="botao-admin">Administração</button>
+    </nav>
+  </header>
+
+  <main id="site-publico">
+    <section class="hero">
+      <div class="hero-conteudo">
+        <span class="etiqueta">☀️ Seu lugar de alegria</span>
+        <h1>Mais diversão.<br><span>Mais momentos felizes!</span></h1>
+        <p>Um lugar para aproveitar a piscina, curtir com a família e criar lembranças especiais.</p>
+        <a class="botao principal" href="#novidades">Descubra as novidades ↓</a>
+      </div>
+      <div class="desenho">
+        <span class="sol">☀️</span>
+        <span class="boia">🛟</span>
+        <span class="palmeira">🌴</span>
+        <span class="bola">🏖️</span>
+        <div class="onda">🌊 🌊 🌊 🌊 🌊</div>
+      </div>
+    </section>
+
+    <section id="sobre" class="secao sobre">
+      <span class="etiqueta">💙 Feito para compartilhar</span>
+      <h2>A alegria acontece aqui!</h2>
+      <p>Prepare-se para momentos refrescantes, diversão para as crianças e bons momentos com quem você ama.</p>
+      <div class="destaques">
+        <article><span>🏊</span><h3>Piscinas</h3><p>Um convite para se refrescar e relaxar.</p></article>
+        <article><span>👨‍👩‍👧‍👦</span><h3>Família</h3><p>Momentos especiais para todas as idades.</p></article>
+        <article><span>🍟</span><h3>Lanchonete</h3><p>Uma pausa gostosa entre as brincadeiras.</p></article>
+      </div>
+    </section>
+
+    <section id="novidades" class="secao novidades">
+      <span class="etiqueta">📣 Fique por dentro</span>
+      <h2>Novidades do clube</h2>
+      <p>Confira eventos, promoções e avisos publicados pela equipe.</p>
+      <div id="lista-novidades" class="grade">
+        <p class="estado">Carregando novidades...</p>
+      </div>
+    </section>
+
+    <section id="galeria" class="secao galeria">
+      <span class="etiqueta">📸 Nossos momentos</span>
+      <h2>Um pouquinho da diversão</h2>
+      <div id="lista-galeria" class="grade">
+        <p class="estado">Carregando galeria...</p>
+      </div>
+    </section>
+  </main>
+
+  <main id="tela-login" class="tela-privada escondido">
+    <section class="painel-login">
+      <button class="voltar" onclick="mostrarInicio()">← Voltar ao site</button>
+      <div class="icone-login">🔐</div>
+      <h1>Área administrativa</h1>
+      <p>Entre para gerenciar o conteúdo da Estação Alegria.</p>
+      <form id="form-login">
+        <label for="senha-admin">Senha administrativa</label>
+        <input id="senha-admin" type="password" placeholder="Digite sua senha"
+               autocomplete="current-password" required>
+        <button class="botao principal largura" type="submit">Entrar</button>
+        <p id="mensagem-login" class="mensagem" role="status"></p>
+      </form>
+    </section>
+  </main>
+
+  <main id="painel-admin" class="escondido painel-admin">
+    <header class="admin-cabecalho">
+      <div>
+        <span class="etiqueta">PAINEL PRIVADO</span>
+        <h1>Olá, equipe! 👋</h1>
+        <p>Gerencie o conteúdo que aparece no site público.</p>
+      </div>
+      <button id="sair-admin" class="botao sair">Sair</button>
+    </header>
+
+    <section class="caixa">
+      <h2>➕ Nova publicação</h2>
+      <form id="form-publicacao">
+        <label for="titulo">Título</label>
+        <input id="titulo" maxlength="120" required
+               placeholder="Ex.: Promoção de domingo">
+
+        <label for="categoria">Tipo de publicação</label>
+        <select id="categoria" required>
+          <option value="aviso">Aviso</option>
+          <option value="evento">Evento</option>
+          <option value="promocao">Promoção</option>
+          <option value="foto">Foto</option>
+          <option value="video">Vídeo</option>
+        </select>
+
+        <label for="descricao">Descrição</label>
+        <textarea id="descricao" maxlength="3000" rows="4"
+                  placeholder="Conte os detalhes..."></textarea>
+
+        <label for="arquivo">Foto ou vídeo (opcional para avisos)</label>
+        <input id="arquivo" type="file" accept="image/*,video/*">
+
+        <p class="ajuda">Fotos e vídeos grandes podem demorar para enviar. Recomendamos arquivos de até 50 MB.</p>
+        <button class="botao principal largura" type="submit">Publicar no site</button>
+        <p id="mensagem-publicacao" class="mensagem" role="status"></p>
+      </form>
+    </section>
+
+    <section class="caixa">
+      <h2>📋 Publicações existentes</h2>
+      <button id="atualizar-publicacoes" class="botao secundario">Atualizar lista</button>
+      <div id="lista-admin" class="lista-admin">
+        <p class="estado">Carregando publicações...</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>💙 Estação Alegria — momentos felizes começam aqui!</p>
+    <a href="https://www.instagram.com/estacao_alegria_oficial/"
+       target="_blank" rel="noopener">@estacao_alegria_oficial</a>
+    <button id="atalho-admin" class="atalho-admin" aria-label="Acesso administrativo">•</button>
+  </footer>
+</body>
+  </html>
+  
