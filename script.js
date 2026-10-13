@@ -493,12 +493,14 @@ $("form-publicacao").addEventListener("submit", async (evento) => {
     return;
   }
 
-  if (arquivo && arquivo.size > 4 * 1024 * 1024) {
+
+if (arquivo && arquivo.size > 50 * 1024 * 1024) {
     mensagem(
       "mensagem-publicacao",
-      "Por enquanto, o envio pelo painel aceita arquivos de até 4 MB. Para vídeos maiores, precisamos configurar envio direto seguro.",
+      "O arquivo ultrapassa o limite de 50 MB do plano gratuito.",
       true
     );
+   
     return;
   }
 
