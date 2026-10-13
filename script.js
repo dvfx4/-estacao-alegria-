@@ -4,22 +4,15 @@
    Login com somente senha na tela
    ========================================== */
 
-// 1. COLOQUE OS DADOS DO SEU SUPABASE
-const SUPABASE_URL = "https://bpurhmqawowwqvjwllrx.supabase.co/rest/v1/";
+// 1. DADOS DO SUPABASE
+const SUPABASE_URL = "https://bpurhmqawowwqvjwllrx.supabase.co";
 const SUPABASE_PUBLIC_KEY = "sb_publishable_buca8xv2z8MTn5OcNAYLZQ_4kKo2Bje";
-
-// Nome do armazenamento criado no Supabase
 const BUCKET = "estacao-media";
-
-// Senha inicial do painel
-// ATENÇÃO: esta senha no navegador não é segura
-// para proteger operações administrativas reais.
-const SENHA_ADMIN = "080626";
+const ADMIN_API_URL = `${SUPABASE_URL}/functions/v1/admin-api`;
 
 const configurado =
   SUPABASE_URL.startsWith("https://") &&
-  !SUPABASE_URL.includes("https://bpurhmqawowwqvjwllrx.supabase.co/rest/v1/") &&
-  !SUPABASE_PUBLIC_KEY.includes("sb_publishable_buca8xv2z8MTn5OcNAYLZQ_4kKo2Bje");
+  SUPABASE_PUBLIC_KEY.length > 10;
 
 const db = configurado && window.supabase
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLIC_KEY)
@@ -27,6 +20,7 @@ const db = configurado && window.supabase
 
 const $ = (id) => document.getElementById(id);
 let adminLiberado = false;
+let senhaAdminSessao = "";
 
 const categorias = {
   aviso: "📣 Aviso",
@@ -36,9 +30,7 @@ const categorias = {
   video: "🎬 Vídeo"
 };
 
-/* ==========================================
-   FUNÇÕES GERAIS
-   ========================================== */
+/* FUNÇÕES GERAIS */
 
 function mensagem(id, texto, erro = false) {
   const elemento = $(id);
@@ -87,47 +79,79 @@ function mostrarPainel() {
 
 function verificarConfiguracao() {
   if (!db) {
-    alert(
-      "Configure a URL e a chave pública do Supabase no início do script.js."
-    );
+    alert("Configure a URL e a chave pública do Supabase no início do script.js.");
     return false;
   }
 
   return true;
 }
 
-/* ==========================================
-   LOGIN — SOMENTE SENHA
-   ========================================== */
+/* LOGIN ADMINISTRATIVO */
 
 $("abrir-admin").addEventListener("click", mostrarLogin);
 $("atalho-admin").addEventListener("click", mostrarLogin);
 
-$("form-login").addEventListener("submit", (evento) => {
+$("form-login").addEventListener("submit", async (evento) => {
   evento.preventDefault();
 
   const senha = $("senha-admin").value;
 
-  if (senha !== SENHA_ADMIN) {
-    mensagem("mensagem-login", "Senha incorreta.", true);
+  if (!senha) {
+    mensagem("mensagem-login", "Digite a senha.", true);
     return;
   }
 
-  adminLiberado = true;
-  $("senha-admin").value = "";
-  mensagem("mensagem-login", "");
+  const botao = $("form-login").querySelector('button[type="submit"]');
+  if (botao) botao.disabled = true;
 
-  mostrarPainel();
+  mensagem("mensagem-login", "Verificando senha...");
+
+  try {
+    const resposta = await fetch(ADMIN_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_PUBLIC_KEY,
+        "x-admin-password": senha
+      },
+      body: JSON.stringify({ action: "login" })
+    });
+
+    const resultado = await resposta.json().catch(() => ({}));
+
+    if (!resposta.ok || !resultado.success) {
+      throw new Error(
+        resultado.error || "Senha incorreta ou não foi possível validar o acesso."
+      );
+    }
+
+    senhaAdminSessao = senha;
+    adminLiberado = true;
+    $("senha-admin").value = "";
+    mensagem("mensagem-login", "");
+    mostrarPainel();
+
+  } catch (erro) {
+    senhaAdminSessao = "";
+    adminLiberado = false;
+    mensagem(
+      "mensagem-login",
+      erro.message || "Falha ao validar o acesso.",
+      true
+    );
+
+  } finally {
+    if (botao) botao.disabled = false;
+  }
 });
 
 $("sair-admin").addEventListener("click", () => {
   adminLiberado = false;
+  senhaAdminSessao = "";
   mostrarInicio();
 });
 
-/* ==========================================
-   CARREGAR PUBLICAÇÕES PÚBLICAS
-   ========================================== */
+/* CARREGAR PUBLICAÇÕES PÚBLICAS */
 
 async function buscarPublicacoes() {
   if (!verificarConfiguracao()) return [];
@@ -139,9 +163,11 @@ async function buscarPublicacoes() {
 
   if (error) {
     console.error("Erro ao carregar publicações:", error);
+
     mostrarErroPublico(
       "Não foi possível carregar as publicações. Verifique a configuração do Supabase."
     );
+
     return [];
   }
 
@@ -186,14 +212,10 @@ function criarCartao(publicacao) {
     criarElemento("span", "tag", categorias[categoria] || "✨ Novidade")
   );
 
-  corpo.appendChild(
-    criarElemento("h3", "", publicacao.titulo)
-  );
+  corpo.appendChild(criarElemento("h3", "", publicacao.titulo));
 
   if (publicacao.descricao) {
-    corpo.appendChild(
-      criarElemento("p", "", publicacao.descricao)
-    );
+    corpo.appendChild(criarElemento("p", "", publicacao.descricao));
   }
 
   cartao.appendChild(corpo);
@@ -248,9 +270,7 @@ async function carregarPublico() {
   }
 }
 
-/* ==========================================
-   PAINEL ADMINISTRATIVO
-   ========================================== */
+/* PAINEL ADMINISTRATIVO */
 
 $("atualizar-publicacoes").addEventListener("click", carregarAdmin);
 
@@ -270,7 +290,9 @@ async function carregarAdmin() {
     return;
   }
 
-  area.appendChild(criarElemento("p", "estado", "Carregando publicações..."));
+  area.appendChild(
+    criarElemento("p", "estado", "Carregando publicações...")
+  );
 
   const { data, error } = await db
     .from("publicacoes")
@@ -289,6 +311,7 @@ async function carregarAdmin() {
         "Não foi possível carregar a lista. Verifique as permissões do Supabase."
       )
     );
+
     return;
   }
 
@@ -329,10 +352,7 @@ async function carregarAdmin() {
   });
 }
 
-/* ==========================================
-   PUBLICAR AVISO, EVENTO, PROMOÇÃO,
-   FOTO OU VÍDEO
-   ========================================== */
+/* PUBLICAR AVISO, EVENTO, PROMOÇÃO, FOTO OU VÍDEO */
 
 $("form-publicacao").addEventListener("submit", async (evento) => {
   evento.preventDefault();
@@ -354,10 +374,10 @@ $("form-publicacao").addEventListener("submit", async (evento) => {
     return;
   }
 
-  if (arquivo && arquivo.size > 50 * 1024 * 1024) {
+  if (arquivo && arquivo.size > 4 * 1024 * 1024) {
     mensagem(
       "mensagem-publicacao",
-      "O arquivo ultrapassa o limite de 50 MB.",
+      "Por enquanto, o envio pelo painel aceita arquivos de até 4 MB. Para vídeos maiores, precisamos configurar envio direto seguro.",
       true
     );
     return;
@@ -368,17 +388,29 @@ $("form-publicacao").addEventListener("submit", async (evento) => {
     !arquivo.type.startsWith("image/") &&
     !arquivo.type.startsWith("video/")
   ) {
-    mensagem("mensagem-publicacao", "Escolha uma foto ou vídeo válido.", true);
+    mensagem(
+      "mensagem-publicacao",
+      "Escolha uma foto ou vídeo válido.",
+      true
+    );
     return;
   }
 
   if (categoria === "foto" && arquivo && !arquivo.type.startsWith("image/")) {
-    mensagem("mensagem-publicacao", "Escolha uma imagem para publicar uma foto.", true);
+    mensagem(
+      "mensagem-publicacao",
+      "Escolha uma imagem para publicar uma foto.",
+      true
+    );
     return;
   }
 
   if (categoria === "video" && arquivo && !arquivo.type.startsWith("video/")) {
-    mensagem("mensagem-publicacao", "Escolha um vídeo para esta publicação.", true);
+    mensagem(
+      "mensagem-publicacao",
+      "Escolha um vídeo para esta publicação.",
+      true
+    );
     return;
   }
 
@@ -398,39 +430,69 @@ $("form-publicacao").addEventListener("submit", async (evento) => {
 
       arquivoPath = `${crypto.randomUUID()}-${nomeSeguro}`;
 
-      const { error: erroUpload } = await db.storage
-        .from(BUCKET)
-        .upload(arquivoPath, arquivo, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: arquivo.type
-        });
+      const buffer = await arquivo.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binario = "";
+      const tamanhoBloco = 0x8000;
 
-      if (erroUpload) throw erroUpload;
-
-      const resultadoUrl = db.storage
-        .from(BUCKET)
-        .getPublicUrl(arquivoPath);
-
-      arquivoUrl = resultadoUrl.data.publicUrl;
-    }
-
-    const { error: erroBanco } = await db
-      .from("publicacoes")
-      .insert({
-        titulo,
-        descricao,
-        categoria,
-        arquivo_url: arquivoUrl,
-        arquivo_path: arquivoPath
-      });
-
-    if (erroBanco) {
-      if (arquivoPath) {
-        await db.storage.from(BUCKET).remove([arquivoPath]);
+      for (let i = 0; i < bytes.length; i += tamanhoBloco) {
+        binario += String.fromCharCode(
+          ...bytes.subarray(i, i + tamanhoBloco)
+        );
       }
 
-      throw erroBanco;
+      const uploadResposta = await fetch(ADMIN_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_PUBLIC_KEY,
+          "x-admin-password": senhaAdminSessao
+        },
+        body: JSON.stringify({
+          action: "upload",
+          path: arquivoPath,
+          contentType: arquivo.type,
+          base64: btoa(binario)
+        })
+      });
+
+      const uploadResultado = await uploadResposta.json().catch(() => ({}));
+
+      if (!uploadResposta.ok) {
+        throw new Error(
+          uploadResultado.error || "Falha ao enviar o arquivo."
+        );
+      }
+
+      arquivoPath = uploadResultado.path;
+      arquivoUrl = uploadResultado.url;
+    }
+
+    const respostaPublicacao = await fetch(ADMIN_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_PUBLIC_KEY,
+        "x-admin-password": senhaAdminSessao
+      },
+      body: JSON.stringify({
+        action: "publish",
+        publicacao: {
+          titulo,
+          descricao,
+          categoria,
+          arquivo_url: arquivoUrl,
+          arquivo_path: arquivoPath
+        }
+      })
+    });
+
+    const resultadoPublicacao = await respostaPublicacao.json().catch(() => ({}));
+
+    if (!respostaPublicacao.ok) {
+      throw new Error(
+        resultadoPublicacao.error || "Falha ao salvar a publicação."
+      );
     }
 
     $("form-publicacao").reset();
@@ -448,7 +510,9 @@ $("form-publicacao").addEventListener("submit", async (evento) => {
 
     mensagem(
       "mensagem-publicacao",
-      `Não foi possível publicar: ${erro.message || "verifique as permissões do Supabase."}`,
+      `Não foi possível publicar: ${
+        erro.message || "verifique as permissões do Supabase."
+      }`,
       true
     );
 
@@ -458,9 +522,7 @@ $("form-publicacao").addEventListener("submit", async (evento) => {
   }
 });
 
-/* ==========================================
-   EXCLUIR PUBLICAÇÃO
-   ========================================== */
+/* EXCLUIR PUBLICAÇÃO */
 
 async function excluirPublicacao(publicacao) {
   if (!adminLiberado) {
@@ -473,21 +535,25 @@ async function excluirPublicacao(publicacao) {
   }
 
   try {
-    const { error } = await db
-      .from("publicacoes")
-      .delete()
-      .eq("id", publicacao.id);
+    const resposta = await fetch(ADMIN_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_PUBLIC_KEY,
+        "x-admin-password": senhaAdminSessao
+      },
+      body: JSON.stringify({
+        action: "delete",
+        id: publicacao.id
+      })
+    });
 
-    if (error) throw error;
+    const resultado = await resposta.json().catch(() => ({}));
 
-    if (publicacao.arquivo_path) {
-      const { error: erroArquivo } = await db.storage
-        .from(BUCKET)
-        .remove([publicacao.arquivo_path]);
-
-      if (erroArquivo) {
-        console.warn("Não foi possível remover o arquivo:", erroArquivo);
-      }
+    if (!resposta.ok) {
+      throw new Error(
+        resultado.error || "Falha ao excluir a publicação."
+      );
     }
 
     await carregarAdmin();
@@ -497,14 +563,14 @@ async function excluirPublicacao(publicacao) {
     console.error("Erro ao excluir:", erro);
 
     alert(
-      "Não foi possível excluir. Confira as permissões do Supabase."
+      `Não foi possível excluir: ${
+        erro.message || "verifique a configuração da função admin-api."
+      }`
     );
   }
 }
 
-/* ==========================================
-   INICIAR O SITE
-   ========================================== */
+/* INICIAR O SITE */
 
 async function iniciarSite() {
   if (!db) {
@@ -518,4 +584,3 @@ async function iniciarSite() {
 }
 
 iniciarSite();
-      
