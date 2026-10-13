@@ -5,8 +5,8 @@
    ========================================== */
 
 // 1. COLOQUE OS DADOS DO SEU SUPABASE
-const SUPABASE_URL = "COLE_A_URL_DO_SEU_PROJETO";
-const SUPABASE_PUBLIC_KEY = "COLE_SUA_CHAVE_PUBLICA";
+const SUPABASE_URL = "https://bpurhmqawowwqvjwllrx.supabase.co/rest/v1/";
+const SUPABASE_PUBLIC_KEY = "sb_publishable_buca8xv2z8MTn5OcNAYLZQ_4kKo2Bje";
 
 // Nome do armazenamento criado no Supabase
 const BUCKET = "estacao-media";
@@ -18,8 +18,8 @@ const SENHA_ADMIN = "080626";
 
 const configurado =
   SUPABASE_URL.startsWith("https://") &&
-  !SUPABASE_URL.includes("COLE_A_URL") &&
-  !SUPABASE_PUBLIC_KEY.includes("COLE_SUA_CHAVE");
+  !SUPABASE_URL.includes("https://bpurhmqawowwqvjwllrx.supabase.co/rest/v1/") &&
+  !SUPABASE_PUBLIC_KEY.includes("sb_publishable_buca8xv2z8MTn5OcNAYLZQ_4kKo2Bje");
 
 const db = configurado && window.supabase
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLIC_KEY)
