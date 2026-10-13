@@ -560,32 +560,16 @@ $("form-publicacao").addEventListener("submit", async (evento) => {
         );
       }
 
-      const uploadResposta = await fetch(ADMIN_API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": SUPABASE_PUBLIC_KEY,
-          "x-admin-password": senhaAdminSessao
-        },
-        body: JSON.stringify({
-          action: "upload",
-          path: arquivoPath,
-          contentType: arquivo.type,
-          base64: btoa(binario)
-        })
-      });
+    
+const uploadResultado = await enviarArquivoGrande(
+  arquivo,
+  (percentual) => {
+    console.log(`Enviando arquivo: ${percentual}%`);
+  }
+);
 
-      const uploadResultado = await uploadResposta.json().catch(() => ({}));
-
-      if (!uploadResposta.ok) {
-        throw new Error(
-          uploadResultado.error || "Falha ao enviar o arquivo."
-        );
-      }
-
-      arquivoPath = uploadResultado.path;
-      arquivoUrl = uploadResultado.url;
-    }
+arquivoPath = uploadResultado.path;
+arquivoUrl = uploadResultado.url;
 
     const respostaPublicacao = await fetch(ADMIN_API_URL, {
       method: "POST",
