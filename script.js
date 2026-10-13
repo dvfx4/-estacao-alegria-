@@ -572,6 +572,7 @@ const uploadResultado = await enviarArquivoGrande(
 
 arquivoPath = uploadResultado.path;
 arquivoUrl = uploadResultado.url;
+       }
 
     const respostaPublicacao = await fetch(ADMIN_API_URL, {
       method: "POST",
