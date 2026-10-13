@@ -22,6 +22,125 @@ const $ = (id) => document.getElementById(id);
 let adminLiberado = false;
 let senhaAdminSessao = "";
 
+const TUS_SCRIPT_URL =
+  "https://cdn.jsdelivr.net/npm/tus-js-client@4/dist/tus.min.js";
+
+function carregarTus() {
+  if (window.tus?.Upload) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    const scriptExistente = document.querySelector(
+      `script[src="${TUS_SCRIPT_URL}"]`
+    );
+
+    if (scriptExistente) {
+      scriptExistente.addEventListener("load", resolve, { once: true });
+      scriptExistente.addEventListener(
+        "error",
+        () => reject(new Error("Não foi possível carregar o sistema de upload.")),
+        { once: true }
+      );
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = TUS_SCRIPT_URL;
+    script.onload = resolve;
+    script.onerror = () =>
+      reject(new Error("Não foi possível carregar o sistema de upload."));
+    document.head.appendChild(script);
+  });
+}
+
+async function enviarArquivoGrande(file, aoProgredir) {
+  const MAX_FILE_SIZE = 500 * 1024 * 1024;
+
+  if (!file || file.size <= 0) {
+    throw new Error("Selecione um arquivo válido.");
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error("O arquivo ultrapassa o limite de 500 MB.");
+  }
+
+  if (!senhaAdminSessao) {
+    throw new Error("Entre novamente no painel administrativo.");
+  }
+
+  if (!db) {
+    throw new Error("Não foi possível conectar ao Supabase.");
+  }
+
+  await carregarTus();
+
+  const resposta = await fetch(ADMIN_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_PUBLIC_KEY,
+      "x-admin-password": senhaAdminSessao
+    },
+    body: JSON.stringify({
+      action: "create-upload-url",
+      fileName: file.name,
+      contentType: file.type || "application/octet-stream",
+      size: file.size
+    })
+  });
+
+  const autorizacao = await resposta.json();
+
+  if (!resposta.ok || !autorizacao.success) {
+    throw new Error(
+      autorizacao.error || "Não foi possível autorizar o envio."
+    );
+  }
+
+  const projectId = new URL(SUPABASE_URL).hostname.split(".")[0];
+
+  return new Promise((resolve, reject) => {
+    const upload = new window.tus.Upload(file, {
+      endpoint: `https://${projectId}.storage.supabase.co/storage/v1/upload/resumable`,
+      headers: {
+        "x-signature": autorizacao.token,
+        "apikey": SUPABASE_PUBLIC_KEY
+      },
+      uploadDataDuringCreation: true,
+      chunkSize: 6 * 1024 * 1024,
+      retryDelays: [0, 3000, 5000, 10000, 20000],
+      removeFingerprintOnSuccess: true,
+      metadata: {
+        bucketName: autorizacao.bucket,
+        objectName: autorizacao.path,
+        contentType: file.type || "application/octet-stream",
+        cacheControl: "3600"
+      },
+      onError(error) {
+        reject(error);
+      },
+      onProgress(enviados, total) {
+        if (typeof aoProgredir === "function") {
+          aoProgredir(Math.round((enviados / total) * 100));
+        }
+      },
+      onSuccess() {
+        const { data } = db.storage
+          .from(autorizacao.bucket)
+          .getPublicUrl(autorizacao.path);
+
+        resolve({
+          path: autorizacao.path,
+          url: data.publicUrl
+        });
+      }
+    });
+
+    upload.start();
+  });
+}
+
 const categorias = {
   aviso: "📣 Aviso",
   evento: "🎉 Evento",
