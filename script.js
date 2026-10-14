@@ -54,15 +54,16 @@ function carregarTus() {
   });
 }
 
+
 async function enviarArquivoGrande(file, aoProgredir) {
-  const MAX_FILE_SIZE = 500 * 1024 * 1024;
+  const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
   if (!file || file.size <= 0) {
     throw new Error("Selecione um arquivo válido.");
   }
 
   if (file.size > MAX_FILE_SIZE) {
-    throw new Error("O arquivo ultrapassa o limite de 500 MB.");
+    throw new Error("O arquivo ultrapassa o limite de 50 MB do plano gratuito.");
   }
 
   if (!senhaAdminSessao) {
@@ -72,8 +73,6 @@ async function enviarArquivoGrande(file, aoProgredir) {
   if (!db) {
     throw new Error("Não foi possível conectar ao Supabase.");
   }
-
-  await carregarTus();
 
   const resposta = await fetch(ADMIN_API_URL, {
     method: "POST",
@@ -98,48 +97,36 @@ async function enviarArquivoGrande(file, aoProgredir) {
     );
   }
 
-  const projectId = new URL(SUPABASE_URL).hostname.split(".")[0];
-
-  return new Promise((resolve, reject) => {
-    const upload = new window.tus.Upload(file, {
-      endpoint: `https://${projectId}.storage.supabase.co/storage/v1/upload/resumable`,
-      headers: {
-        "x-signature": autorizacao.token,
-        "apikey": SUPABASE_PUBLIC_KEY
-      },
-      uploadDataDuringCreation: true,
-      chunkSize: 6 * 1024 * 1024,
-      retryDelays: [0, 3000, 5000, 10000, 20000],
-      removeFingerprintOnSuccess: true,
-      metadata: {
-        bucketName: autorizacao.bucket,
-        objectName: autorizacao.path,
+  const { data, error } = await db.storage
+    .from(autorizacao.bucket)
+    .uploadToSignedUrl(
+      autorizacao.path,
+      autorizacao.token,
+      file,
+      {
         contentType: file.type || "application/octet-stream",
         cacheControl: "3600"
-      },
-      onError(error) {
-        reject(error);
-      },
-      onProgress(enviados, total) {
-        if (typeof aoProgredir === "function") {
-          aoProgredir(Math.round((enviados / total) * 100));
-        }
-      },
-      onSuccess() {
-        const { data } = db.storage
-          .from(autorizacao.bucket)
-          .getPublicUrl(autorizacao.path);
-
-        resolve({
-          path: autorizacao.path,
-          url: data.publicUrl
-        });
       }
-    });
+    );
 
-    upload.start();
-  });
+  if (error) {
+    throw new Error("Falha no envio: " + error.message);
+  }
+
+  if (typeof aoProgredir === "function") {
+    aoProgredir(100);
+  }
+
+  const { data: arquivoPublico } = db.storage
+    .from(autorizacao.bucket)
+    .getPublicUrl(data.path);
+
+  return {
+    path: data.path,
+    url: arquivoPublico.publicUrl
+  };
 }
+
 
 const categorias = {
   aviso: "📣 Aviso",
