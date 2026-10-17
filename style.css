@@ -177,3 +177,168 @@ footer a { font-weight: 900; }
   .admin-cabecalho { align-items: flex-start; }
   .item-admin { align-items: flex-start; }
 }
+/* ===== CARDÁPIO ESTAÇÃO ALEGRIA ===== */
+
+.cardapio {
+  background: #f3fbfc;
+  padding: 60px 20px;
+  scroll-margin-top: 90px;
+}
+
+.introducao-cardapio {
+  text-align: center;
+  max-width: 750px;
+  margin: 0 auto 30px;
+}
+
+.introducao-cardapio h2 {
+  color: #07446b;
+  font-size: clamp(28px, 4vw, 42px);
+  margin-bottom: 12px;
+}
+
+.introducao-cardapio p {
+  color: #496575;
+  margin: 8px 0;
+}
+
+.categorias-cardapio {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 25px auto 35px;
+  max-width: 1100px;
+}
+
+.categorias-cardapio a {
+  display: inline-block;
+  background: #07446b;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 25px;
+  text-decoration: none;
+  font-weight: 700;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.categorias-cardapio a:hover {
+  background: #168baf;
+  transform: translateY(-2px);
+}
+
+.grade-cardapio {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  max-width: 1150px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+.item-cardapio {
+  background: #fff;
+  padding: 24px;
+  border-radius: 18px;
+  border: 1px solid #d8edf0;
+  box-shadow: 0 5px 18px rgba(7, 68, 107, 0.08);
+  scroll-margin-top: 100px;
+  min-width: 0;
+}
+
+.item-cardapio h3 {
+  color: #07446b;
+  font-size: 21px;
+  margin: 20px 0 14px;
+  padding-bottom: 9px;
+  border-bottom: 2px solid #c4f4f3;
+}
+
+.item-cardapio h3:first-child {
+  margin-top: 0;
+}
+
+.item-cardapio p {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  color: #344b57;
+  font-size: 15px;
+  line-height: 1.6;
+  padding: 9px 0;
+  margin: 0;
+  border-bottom: 1px solid #edf3f4;
+}
+
+.item-cardapio p strong {
+  color: #07446b;
+  white-space: normal;
+  text-align: right;
+}
+
+.item-cardapio p span {
+  color: #607985;
+  font-size: 13px;
+}
+
+.item-cardapio .descricao-item {
+  display: block;
+  color: #607985;
+  font-size: 13px;
+  padding-top: 0;
+  border-bottom: 0;
+}
+
+.item-cardapio .aviso-cardapio {
+  display: block;
+  background: #fff7d6;
+  color: #745a00;
+  padding: 12px;
+  margin-top: 14px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+#porcoes,
+#almoco,
+#cervejas,
+#refrigerantes,
+#outros,
+#destilados,
+#caipirinhas,
+#combos,
+#narguile {
+  scroll-margin-top: 100px;
+}
+
+@media (max-width: 700px) {
+  .cardapio {
+    padding: 40px 14px;
+  }
+
+  .grade-cardapio {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .item-cardapio {
+    padding: 18px;
+    border-radius: 14px;
+  }
+
+  .categorias-cardapio {
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .categorias-cardapio a {
+    font-size: 13px;
+    padding: 9px 12px;
+  }
+
+  .item-cardapio p {
+    font-size: 14px;
+  }
+}
