@@ -342,3 +342,55 @@ footer a { font-weight: 900; }
     font-size: 14px;
   }
 }
+
+/* ===== LOCALIZAÇÃO ESTAÇÃO ALEGRIA ===== */
+
+.localizacao {
+  background: #f3fbfc;
+  padding: 55px 20px;
+  scroll-margin-top: 90px;
+}
+
+.botao-localizacao {
+  display: inline-block;
+  margin-top: 18px;
+  padding: 13px 24px;
+  border-radius: 30px;
+  background: #07446b;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 700;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.botao-localizacao:hover {
+  background: #168baf;
+  transform: translateY(-2px);
+}
+
+.mapa-localizacao {
+  width: 100%;
+  max-width: 1000px;
+  height: 360px;
+  margin: 30px auto 0;
+  overflow: hidden;
+  border-radius: 18px;
+  box-shadow: 0 5px 20px rgba(7, 68, 107, 0.12);
+}
+
+.mapa-localizacao iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+@media (max-width: 600px) {
+  .localizacao {
+    padding: 40px 14px;
+  }
+
+  .mapa-localizacao {
+    height: 280px;
+    border-radius: 14px;
+  }
+}
