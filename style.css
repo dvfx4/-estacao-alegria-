@@ -394,3 +394,19 @@ footer a { font-weight: 900; }
     border-radius: 14px;
   }
 }
+.botao-whatsapp {
+  display: inline-block;
+  margin: 12px 8px 0;
+  padding: 14px 24px;
+  background: #25B85D;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  border-radius: 30px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.botao-whatsapp:hover {
+  background: #1da851;
+  transform: translateY(-2px);
+}
